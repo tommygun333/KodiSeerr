@@ -22,12 +22,6 @@ _NETWORKS = [
 ]
 
 
-def _get_imdb_rating(media_type, item_id, show_ratings):
-    if not show_ratings:
-        return 0.0
-    return media_utils.get_imdb_rating(media_type, item_id)
-
-
 def list_main_menu():
     xbmcplugin.setContent(context.addon_handle, 'files')
     items = [
@@ -225,7 +219,7 @@ def show_collection_details(collection_id):
             url = build_url({'mode': 'request', 'type': media_type, 'id': item_id})
             list_item = xbmcgui.ListItem(label=label)
             list_item.addContextMenuItems(ctx_menu)
-            imdb_rating = _get_imdb_rating(media_type, item_id, show_ratings)
+            imdb_rating = media_utils.get_imdb_rating(media_type, item_id) if show_ratings else 0.0
             info = media_utils.make_info(item, media_type, imdb_rating=imdb_rating, show_rating=show_ratings)
             if status_label:
                 info['plot'] = f"{status_label}\n{info['plot']}" if info.get('plot') else status_label
@@ -292,7 +286,7 @@ def list_items(data, mode, display_type=None, genre_id=None):
         url = build_url({'mode': 'request', 'type': media_type, 'id': item_id})
         list_item = xbmcgui.ListItem(label=label)
         list_item.addContextMenuItems(ctx_menu)
-        imdb_rating = _get_imdb_rating(media_type, item_id, show_ratings)
+        imdb_rating = media_utils.get_imdb_rating(media_type, item_id) if show_ratings else 0.0
         info = media_utils.make_info(item, media_type, imdb_rating=imdb_rating, show_rating=show_ratings)
         if status_label:
             info['plot'] = f"{status_label}\n{info['plot']}" if info.get('plot') else status_label
@@ -395,7 +389,7 @@ def list_recently_added():
         url = build_url({'mode': 'request', 'type': media_type, 'id': item_id})
         list_item = xbmcgui.ListItem(label=label)
         list_item.addContextMenuItems(ctx_menu)
-        imdb_rating = _get_imdb_rating(media_type, item_id, show_ratings)
+        imdb_rating = media_utils.get_imdb_rating(media_type, item_id) if show_ratings else 0.0
         info = media_utils.make_info(item, media_type, imdb_rating=imdb_rating, show_rating=show_ratings)
         if status_label:
             info['plot'] = f"{status_label}\n{info['plot']}" if info.get('plot') else status_label
@@ -517,7 +511,7 @@ def search():
         url = build_url({'mode': 'request', 'type': media_type, 'id': item_id})
         list_item = xbmcgui.ListItem(label=full_title)
         list_item.addContextMenuItems(ctx_menu)
-        imdb_rating = _get_imdb_rating(media_type, item_id, show_ratings)
+        imdb_rating = media_utils.get_imdb_rating(media_type, item_id) if show_ratings else 0.0
         info = media_utils.make_info(item, media_type, imdb_rating=imdb_rating, show_rating=show_ratings)
         if status_label:
             info['plot'] = f"{status_label}\n{info['plot']}" if info.get('plot') else status_label

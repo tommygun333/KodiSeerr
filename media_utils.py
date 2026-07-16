@@ -37,10 +37,14 @@ def get_imdb_rating(media_type, media_id):
     if not isinstance(imdb_data, dict):
         return 0.0
     try:
-        score = float(imdb_data.get('criticsScore', 0) or 0)
+        imdb_score = float(imdb_data.get('criticsScore', 0) or 0)
     except Exception:
-        score = 0.0
-    return score if score > 0 else 0.0
+        imdb_score = 0.0
+    return imdb_score if imdb_score > 0 else 0.0
+
+
+def format_rating_display(rating):
+    return f"{rating:.1f}" if rating > 0 else "-"
 
 
 def make_info(item, media_type, imdb_rating=None, show_rating=None):
@@ -84,8 +88,7 @@ def make_info(item, media_type, imdb_rating=None, show_rating=None):
     if mpaa: rich_plot += f"\nCertification: {mpaa}"
     if runtime: rich_plot += f"\nRuntime: {runtime} min"
     if show_rating:
-        rating_display = f"{rating:.1f}" if rating > 0 else "-"
-        rich_plot += f"\nRating: {rating_display}"
+        rich_plot += f"\nRating: {format_rating_display(rating)}"
     if director: rich_plot += f"\nDirector: {director}"
     if cast_str: rich_plot += f"\nCast: {cast_str}"
     if plot: rich_plot += f"\n\n{plot}"

@@ -43,11 +43,10 @@ def show_details(media_type, media_id):
     overview = data.get('overview', 'No description available')
     release_date = data.get('releaseDate') or data.get('firstAirDate', 'Unknown')
     rating = media_utils.get_imdb_rating(media_type, media_id) if show_ratings else 0.0
-    rating_display = f"{rating:.1f}" if rating > 0 else "-"
     genres = ', '.join([g['name'] for g in data.get('genres', [])])
     details = f"[B]{title}[/B]\n\nRelease Date: {release_date}\n"
     if show_ratings:
-        details += f"Rating: {rating_display}/10\n"
+        details += f"Rating: {media_utils.format_rating_display(rating)}/10\n"
     if genres:
         details += f"Genres: {genres}\n"
     details += f"\n{overview}\n\n"
