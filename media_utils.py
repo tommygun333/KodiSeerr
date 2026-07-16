@@ -22,7 +22,28 @@ def make_art(item):
     return art
 
 
-def make_info(item, media_type):
+def get_imdb_rating(media_type, media_id):
+    if media_type not in ('movie', 'tv') or not media_id:
+        return 0.0
+    cache_key = f"ratingscombined_{media_type}_{media_id}"
+    data = cache.get_cached(cache_key)
+    if data is None:
+        data = api_client.client.api_request(f"/{media_type}/{media_id}/ratingscombined")
+        if data is not None:
+            cache.set_cached(cache_key, data)
+    if not isinstance(data, dict):
+        return 0.0
+    imdb_data = data.get('imdb')
+    if not isinstance(imdb_data, dict):
+        return 0.0
+    try:
+        score = float(imdb_data.get('criticsScore', 0) or 0)
+    except Exception:
+        score = 0.0
+    return score if score > 0 else 0.0
+
+
+def make_info(item, media_type, imdb_rating=None, show_rating=None):
     release_date = item.get('releaseDate') or item.get('firstAirDate')
     year = int(release_date.split("-")[0]) if release_date and release_date.split("-")[0].isdigit() else 0
 
@@ -40,14 +61,13 @@ def make_info(item, media_type):
         runtime = int(item.get('runtime', 0))
     except Exception:
         runtime = 0
+    if show_rating is None:
+        show_rating = media_type in ('movie', 'tv')
     try:
-        rating = float(item.get('voteAverage', 0))
+        rating = float(imdb_rating or 0)
     except Exception:
         rating = 0.0
-    try:
-        votes = int(item.get('voteCount', 0))
-    except Exception:
-        votes = 0
+    votes = 0
     director = ', '.join([c['name'] for c in item.get('crew', []) if c.get('job') == 'Director']) if item.get('crew') else ''
     cast = [p['name'] for p in item.get('cast', []) if isinstance(p, dict) and 'name' in p]
     cast_str = ', '.join(cast[:5])
@@ -63,7 +83,9 @@ def make_info(item, media_type):
     if country: rich_plot += f"\nCountry: {country}"
     if mpaa: rich_plot += f"\nCertification: {mpaa}"
     if runtime: rich_plot += f"\nRuntime: {runtime} min"
-    if rating: rich_plot += f"\nRating: {rating} ({votes} votes)"
+    if show_rating:
+        rating_display = f"{rating:.1f}" if rating > 0 else "-"
+        rich_plot += f"\nRating: {rating_display}"
     if director: rich_plot += f"\nDirector: {director}"
     if cast_str: rich_plot += f"\nCast: {cast_str}"
     if plot: rich_plot += f"\n\n{plot}"
@@ -73,7 +95,7 @@ def make_info(item, media_type):
         'plot': rich_plot or "",
         'year': year,
         'genre': genres or "",
-        'rating': rating,
+        'rating': rating if show_rating else 0.0,
         'votes': votes,
         'premiered': release_date or "",
         'duration': runtime,
