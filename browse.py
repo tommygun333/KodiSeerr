@@ -194,6 +194,7 @@ def list_collections():
 
 def show_collection_details(collection_id):
     xbmcplugin.setContent(context.addon_handle, 'movies')
+    show_ratings = context.addon.getSettingBool('show_ratings')
     cache_key = f"collection_{collection_id}"
     data = cache.get_cached(cache_key)
     if not data:
@@ -218,7 +219,8 @@ def show_collection_details(collection_id):
             url = build_url({'mode': 'request', 'type': media_type, 'id': item_id})
             list_item = xbmcgui.ListItem(label=label)
             list_item.addContextMenuItems(ctx_menu)
-            info = media_utils.make_info(item, media_type)
+            imdb_rating = media_utils.get_imdb_rating(media_type, item_id) if show_ratings else 0.0
+            info = media_utils.make_info(item, media_type, imdb_rating=imdb_rating, show_rating=show_ratings)
             if status_label:
                 info['plot'] = f"{status_label}\n{info['plot']}" if info.get('plot') else status_label
             media_utils.set_info_tag(list_item, info)
@@ -229,6 +231,7 @@ def show_collection_details(collection_id):
 
 def list_items(data, mode, display_type=None, genre_id=None):
     items = data.get('results', [])
+    show_ratings = context.addon.getSettingBool('show_ratings')
     current_page = data.get('page', 1)
     total_pages = data.get('totalPages', 1)
     is_widget = xbmc.getCondVisibility('Window.IsVisible(home)')
@@ -283,7 +286,8 @@ def list_items(data, mode, display_type=None, genre_id=None):
         url = build_url({'mode': 'request', 'type': media_type, 'id': item_id})
         list_item = xbmcgui.ListItem(label=label)
         list_item.addContextMenuItems(ctx_menu)
-        info = media_utils.make_info(item, media_type)
+        imdb_rating = media_utils.get_imdb_rating(media_type, item_id) if show_ratings else 0.0
+        info = media_utils.make_info(item, media_type, imdb_rating=imdb_rating, show_rating=show_ratings)
         if status_label:
             info['plot'] = f"{status_label}\n{info['plot']}" if info.get('plot') else status_label
         media_utils.set_info_tag(list_item, info)
@@ -324,6 +328,7 @@ def jump_to_page():
 
 def list_recently_added():
     xbmcplugin.setContent(context.addon_handle, 'videos')
+    show_ratings = context.addon.getSettingBool('show_ratings')
     page = context.args.get('page', 1)
     try:
         page = int(page)
@@ -384,7 +389,8 @@ def list_recently_added():
         url = build_url({'mode': 'request', 'type': media_type, 'id': item_id})
         list_item = xbmcgui.ListItem(label=label)
         list_item.addContextMenuItems(ctx_menu)
-        info = media_utils.make_info(item, media_type)
+        imdb_rating = media_utils.get_imdb_rating(media_type, item_id) if show_ratings else 0.0
+        info = media_utils.make_info(item, media_type, imdb_rating=imdb_rating, show_rating=show_ratings)
         if status_label:
             info['plot'] = f"{status_label}\n{info['plot']}" if info.get('plot') else status_label
         media_utils.set_info_tag(list_item, info)
@@ -448,6 +454,7 @@ def list_episodes(tv_id, season_number):
 
 def search():
     xbmcplugin.setContent(context.addon_handle, 'videos')
+    show_ratings = context.addon.getSettingBool('show_ratings')
     page = context.args.get('page', 1)
     try:
         page = int(page)
@@ -504,7 +511,8 @@ def search():
         url = build_url({'mode': 'request', 'type': media_type, 'id': item_id})
         list_item = xbmcgui.ListItem(label=full_title)
         list_item.addContextMenuItems(ctx_menu)
-        info = media_utils.make_info(item, media_type)
+        imdb_rating = media_utils.get_imdb_rating(media_type, item_id) if show_ratings else 0.0
+        info = media_utils.make_info(item, media_type, imdb_rating=imdb_rating, show_rating=show_ratings)
         if status_label:
             info['plot'] = f"{status_label}\n{info['plot']}" if info.get('plot') else status_label
         media_utils.set_info_tag(list_item, info)

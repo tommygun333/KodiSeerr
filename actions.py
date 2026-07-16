@@ -29,6 +29,7 @@ def clear_cache():
 
 
 def show_details(media_type, media_id):
+    show_ratings = context.addon.getSettingBool('show_ratings')
     cache_key = f"details_{media_type}_{media_id}"
     data = cache.get_cached(cache_key)
     if not data:
@@ -41,9 +42,11 @@ def show_details(media_type, media_id):
     title = data.get('title') or data.get('name', 'Unknown')
     overview = data.get('overview', 'No description available')
     release_date = data.get('releaseDate') or data.get('firstAirDate', 'Unknown')
-    rating = data.get('voteAverage', 0)
+    rating = media_utils.get_imdb_rating(media_type, media_id) if show_ratings else 0.0
     genres = ', '.join([g['name'] for g in data.get('genres', [])])
-    details = f"[B]{title}[/B]\n\nRelease Date: {release_date}\nRating: {rating}/10\n"
+    details = f"[B]{title}[/B]\n\nRelease Date: {release_date}\n"
+    if show_ratings:
+        details += f"Rating: {media_utils.format_rating_display(rating)}/10\n"
     if genres:
         details += f"Genres: {genres}\n"
     details += f"\n{overview}\n\n"
@@ -94,6 +97,7 @@ def remove_from_favorites(media_type, media_id):
 
 def list_favorites():
     xbmcplugin.setContent(context.addon_handle, 'videos')
+    show_ratings = context.addon.getSettingBool('show_ratings')
     favorites = storage.load_favorites()
     if not favorites:
         info_item = xbmcgui.ListItem(label='[I]No favorites yet[/I]')
@@ -130,7 +134,9 @@ def list_favorites():
             list_item = xbmcgui.ListItem(label=label)
             list_item.addContextMenuItems(ctx_menu)
             if art_data:
-                media_utils.set_info_tag(list_item, media_utils.make_info(art_data, media_type))
+                imdb_rating = media_utils.get_imdb_rating(media_type, media_id) if show_ratings else 0.0
+                info = media_utils.make_info(art_data, media_type, imdb_rating=imdb_rating, show_rating=show_ratings)
+                media_utils.set_info_tag(list_item, info)
                 list_item.setArt(media_utils.make_art(art_data))
             elif meta.get('poster'):
                 list_item.setArt({
@@ -148,6 +154,7 @@ def show_profile():
         return
 
     xbmcplugin.setContent(context.addon_handle, 'files')
+    show_ratings = context.addon.getSettingBool('show_ratings')
 
     display_name = user.get('displayName') or user.get('username') or user.get('email', 'Unknown')
     email = user.get('email', '')
@@ -228,7 +235,9 @@ def show_profile():
                 label += f'  {status_str}'
             list_item = xbmcgui.ListItem(label=label)
             list_item.setArt(media_utils.make_art(media_data))
-            media_utils.set_info_tag(list_item, media_utils.make_info(media_data, media_type))
+            imdb_rating = media_utils.get_imdb_rating(media_type, media_id) if show_ratings else 0.0
+            info = media_utils.make_info(media_data, media_type, imdb_rating=imdb_rating, show_rating=show_ratings)
+            media_utils.set_info_tag(list_item, info)
             if media_status == 5 and media_type == 'movie':
                 url = build_url({'mode': 'play_local_file', 'type': media_type, 'id': media_id})
                 list_item.setProperty('IsPlayable', 'true')
@@ -243,6 +252,7 @@ def show_profile():
 
 def show_person_credits(person_id):
     xbmcplugin.setContent(context.addon_handle, 'videos')
+    show_ratings = context.addon.getSettingBool('show_ratings')
     cache_key = f"person_credits_{person_id}"
     data = cache.get_cached(cache_key)
     if not data:
@@ -276,7 +286,9 @@ def show_person_credits(person_id):
         url = build_url({'mode': 'request', 'type': media_type, 'id': item_id})
         list_item = xbmcgui.ListItem(label=label)
         list_item.addContextMenuItems(ctx_menu)
-        media_utils.set_info_tag(list_item, media_utils.make_info(item, media_type))
+        imdb_rating = media_utils.get_imdb_rating(media_type, item_id) if show_ratings else 0.0
+        info = media_utils.make_info(item, media_type, imdb_rating=imdb_rating, show_rating=show_ratings)
+        media_utils.set_info_tag(list_item, info)
         list_item.setArt(media_utils.make_art(item))
         xbmcplugin.addDirectoryItem(context.addon_handle, url, list_item, False)
     xbmcplugin.addSortMethod(context.addon_handle, xbmcplugin.SORT_METHOD_UNSORTED)
